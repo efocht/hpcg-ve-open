@@ -1,85 +1,71 @@
-########################################################
-# High Performance Conjugate Gradient Benchmark (HPCG) #
-########################################################
+## Short build and run instructions.
 
-Jack Dongarra and Michael Heroux and Piotr Luszczek
+### Clone/Checkout repository
 
-Revision: 3.1
+```
+git clone https://github.com/efocht/hpcg-ve.git
+cd hpcg-ve
+```
 
-Date: March 28, 2019
+### Activate NCC and NEC MPI
 
-## Introduction ##
+For example:
+```
+export NLC_PREFIX=/opt/nec/ve/nlc/2.1.0
+export MPI_PREFIX=/opt/nec/ve/mpi/2.9.0
+. ${MPI_PREFIX}/bin/necmpivars.sh
+. ${NLC_PREFIX}/bin/nlcvars.sh
+```
 
-HPCG is a software package that performs a fixed number of multigrid preconditioned
-(using a symmetric Gauss-Seidel smoother) conjugate gradient (PCG) iterations using double
-precision (64 bit) floating point values.
+### Build
 
-The HPCG rating is is a weighted GFLOP/s (billion floating operations per second) value
-that is composed of the operations performed in the PCG iteration phase over
-the time taken.  The overhead time of problem construction and any modifications to improve
-performance are divided by 500 iterations (the amortization weight) and added to the runtime.
+Normal build:
+```
+mkdir build
+cd build
+../configure aurora
+make
+```
 
-Integer arrays have global and local
-scope (global indices are unique across the entire distributed memory system,
-local indices are unique within a memory image).  Integer data for global/local
-indices have three modes:
+Build with *ftrace* performance profiling:
+```
+mkdir build-ftrace
+cd build-ftrace
+../configure aurora
+make FTRACE=1
+```
 
-* 32/32 - global and local integers are 32-bit
-* 64/32 - global integers are 64-bit, local are 32-bit
-* 64/64 - global and local are 64-bit.
+### Run
 
-These various modes are required in order to address sufficiently big problems
-if the range of indexing goes above 2^31 (roughly 2.1B), or to conserve storage
-costs if the range of indexing is less than 2^31.
+```
+cd bin
+./run.sh
+```
 
-The  HPCG  software  package requires the availibility on your system of an
-implementation of the  Message Passing Interface (MPI) if enabling the MPI
-build of HPCG, and a compiler that supports OpenMP syntax. An implementation
-compliant with MPI version 1.1 is sufficient.
+### Analyze ftrace data
 
-## Installation ##
+If compiled with *ftrace* the processes will generate files called `ftrace.out.*`.
 
-See the file `INSTALL` in this directory.
+Print an aggregated overview of the ftrace performance:
+```
+/opt/nec/ve/bin/ftrace -f ftrace.out.*
+```
 
-## Valid Runs ##
+Output detailed ftrace performance of one MPI rank:
+```
+/opt/nec/ve/bin/ftrace -f ftrace.out.0.0
+```
 
-HPCG can be run in just a few minutes from start to finish.  However, official
-runs must be at least 1800 seconds (30 minutes) as reported in the output file.
-The Quick Path option is an exception for machines that are in production mode
-prior to broad availability of an optimized version of HPCG 3.0 for a given platform.
-In this situation (which should be confirmed by sending a note to the HPCG Benchmark
-owners) the Quick Path option can be invoked by setting the run time parameter equal
-to 0 (zero).
 
-A valid run must also execute a problem size that is large enough so that data
-arrays accessed in the CG iteration loop do not fit in the cache of the device
-in a way that would be unrealistic in a real application setting.  Presently this
-restriction means that the problem size should be large enough to occupy a
-significant fraction of *main memory*, at least 1/4 of the total.
+### Rebuilding libvhcallVH.so
 
-Future memory system architectures may require restatement of the specific memory
-size requirements.  But the guiding principle will always be that the problem
-size should reflect what would be reasonable for a real sparse iterative solver.
+When rebuilding `libvhcallVH.so` you will need to use a modern gcc compiler, for example
+from devtoolset-8 (which can be installed in CentOS 7).
 
-## Documentation ##
+Activate it with
+```
+source scl_source enable devtoolset-8
+```
 
-The source code documentation can be generated with a Doxygen (version 1.8 or
-newer). In this directory type:
+Then change into the libvhcall directory and type `make`.
 
-    doxygen tools/hpcg.dox
-
-Doxygen will then generate various output formats in the `out` directory.
-
-## Tuning ##
-
-See the file `TUNING` in this directory.
-
-## Bugs ##
-
-Known problems and bugs with this release are documented in the file
-`BUGS`.
-
-## Further information ##
-
-Check out  the website  http://www.hpcg-benchmark.org/ for the latest
-information and performance results.
