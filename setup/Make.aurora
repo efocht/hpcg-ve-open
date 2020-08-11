@@ -65,14 +65,12 @@ MKDIR        = mkdir -p
 RM           = /bin/rm -f
 TOUCH        = touch
 
-ARCH          = SX
+ARCH          = aurora
 #INT64         = -DINT64
 #OPENMP        = -fopenmp -fdiag-parallel=2
-#FTRACE        = -ftrace -DFTRACE
-#SXOPTC        = -DSXOPT_CINCL
 VHCALL	      = -DVHCALL
 #
-PARAMS = $(INT64) $(OPENMP) $(FTRACE) $(SXOPTC) $(VHCALL)
+PARAMS = $(INT64) $(OPENMP) $(VHCALL)
 #
 # ----------------------------------------------------------------------
 # - HPCG Directory Structure / HPCG library ------------------------------
@@ -112,7 +110,11 @@ ifdef VHCALL
    HPCG_LIBS := $(HPCG_LIBS)
    ADDOBJS += src/libvhcallVE.o
 endif
-ADDOBJS += src/libvehpcg.a
+ifdef FTRACE
+   ADDOBJS += src/libvehpcg_ftrace.a
+else
+   ADDOBJS += src/libvehpcg.a
+endif
 #
 # - Compile time options -----------------------------------------------
 #
@@ -139,10 +141,13 @@ HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES) $(PARAMS) #-DHPCG_DEBUG #-DHPCG_DE
 # ----------------------------------------------------------------------
 #
 CXX          = mpinc++ -DSX
-ifeq (yes, DBG)
-CXXFLAGS     = $(HPCG_DEFS) -report-all -O0 -g $(PARAMS)
+ifdef DBG
+   CXXFLAGS     = $(HPCG_DEFS) -report-all -O0 -g $(PARAMS)
 else
-CXXFLAGS     = $(HPCG_DEFS) -report-all -O4 -finline -finline-functions $(PARAMS)
+   CXXFLAGS     = $(HPCG_DEFS) -report-all -O4 -finline -finline-functions $(PARAMS)
+endif
+ifdef FTRACE
+   CXXFLAGS    += -ftrace
 endif
 #
 LINKER       = $(CXX)

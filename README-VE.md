@@ -19,11 +19,20 @@ export MPI_PREFIX=/opt/nec/ve/mpi/2.9.0
 
 ### Build
 
+Normal build:
 ```
 mkdir build
 cd build
 ../configure aurora
 make
+```
+
+Build with *ftrace* performance profiling:
+```
+mkdir build-ftrace
+cd build-ftrace
+../configure aurora
+make FTRACE=1
 ```
 
 ### Run
@@ -32,6 +41,21 @@ make
 cd bin
 ./run.sh
 ```
+
+### Analyze ftrace data
+
+If compiled with *ftrace* the processes will generate files called `ftrace.out.*`.
+
+Print an aggregated overview of the ftrace performance:
+```
+/opt/nec/ve/bin/ftrace -f ftrace.out.*
+```
+
+Output detailed ftrace performance of one MPI rank:
+```
+/opt/nec/ve/bin/ftrace -f ftrace.out.0.0
+```
+
 
 ### Rebuilding libvhcallVH.so
 

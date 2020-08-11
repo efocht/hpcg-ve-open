@@ -49,8 +49,8 @@ HPCG_DEPS = src/CG.o \
 	    $(ADDOBJS)
 
 # These header files are included in many source files, so we recompile every file if one or more of these header is modified.
-PRIMARY_HEADERS = $(addprefix HPCG_SRC_PATH/src/,Geometry.hpp SparseMatrix.hpp Vector.hpp \
-		    CGData.hpp MGData.hpp hpcg.hpp)
+PRIMARY_HEADERS = $(addprefix HPCG_SRC_PATH/src/,Geometry.hpp SparseMatrix.hpp \
+		    Vector.hpp CGData.hpp MGData.hpp hpcg.hpp)
 
 all: bin/xhpcg
 
@@ -59,7 +59,7 @@ bin/xhpcg: src/main.o $(HPCG_DEPS) HPCG_SRC_PATH/libvhcall/libvhcallVH.so
 	cp -p HPCG_SRC_PATH/libvhcall/libvhcallVH.so bin
 
 clean:
-	rm -f src/*.o bin/xhpcg
+	rm -f src/*.o *.L *.LL bin/xhpcg
 
 .PHONY: all clean
 
@@ -196,4 +196,4 @@ src/libvhcallVE.o: HPCG_SRC_PATH/src/libvhcallVE.cpp
 	$(CXX) -fPIC -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
 
 src/libvehpcg.a: HPCG_SRC_PATH/libve/libvehpcg.a
-	cp -p HPCG_SRC_PATH/libve/libvehpcg.a src
+	cp -p HPCG_SRC_PATH/libve/libvehpcg*.a src
