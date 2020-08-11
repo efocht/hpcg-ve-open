@@ -33,3 +33,15 @@ cd bin
 ./run.sh
 ```
 
+### Rebuilding libvhcallVH.so
+
+When rebuilding `libvhcallVH.so` you will need to use a modern gcc compiler, for example
+from devtoolset-8 (which can be installed in CentOS 7).
+
+Activate it with
+```
+source scl_source enable devtoolset-8
+```
+
+Then change into the libvhcall directory and type `make`.
+
