@@ -43,7 +43,7 @@ done
 
 # copy hpcg.dat if it doesn't exist
 if test ! -f bin/hpcg.dat ; then
-  cp ${src_path}/bin/hpcg.dat bin/hpcg.dat
+  cp -p ${src_path}/bin/{hpcg.dat,run.sh} bin
 fi
 
 # copy the architecture setup file
