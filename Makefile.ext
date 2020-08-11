@@ -54,8 +54,9 @@ PRIMARY_HEADERS = $(addprefix HPCG_SRC_PATH/src/,Geometry.hpp SparseMatrix.hpp V
 
 all: bin/xhpcg
 
-bin/xhpcg: src/main.o $(HPCG_DEPS)
+bin/xhpcg: src/main.o $(HPCG_DEPS) HPCG_SRC_PATH/libvhcall/libvhcallVH.so
 	$(LINKER) $(LINKFLAGS) src/main.o $(HPCG_DEPS) $(HPCG_LIBS) -o bin/xhpcg
+	cp -p HPCG_SRC_PATH/libvhcall/libvhcallVH.so bin
 
 clean:
 	rm -f src/*.o bin/xhpcg
