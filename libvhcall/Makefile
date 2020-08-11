@@ -17,13 +17,10 @@ CC = $(GCC)
 CXX = $(GCXX)
 CFLAGS = $(GCFLAGS)
 
-all: libvhcallVE.so libvhcallVH.so
+all: libvhcallVH.so
 
-libvhcallVE.so: libvhcallVE.o
-	$(NCC) -shared -fPIC -o $@ $(NCFLAGS) $^
-
-libvhcallVE.o: libvhcallVE.c
-	$(NCC) -fPIC -c $(NCFLAGS) $^
+#libvhcallVE.o: libvhcallVE.c
+#	$(NCC) -fPIC -c $(NCFLAGS) $^
 
 libvhcallVH.so: libvhcallVH.o libvhcallVHcpp.o Hyperplane.o GetPerm.o
 	$(CXX) -shared -fPIC -o $@ $(CFLAGS) -Wl,-zdefs -Wl,-zrelro -Wl,-znow $^
