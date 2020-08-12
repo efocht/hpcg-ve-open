@@ -18,7 +18,7 @@
  @file ComputeSYMGS.cpp
 
  HPCG routine
- */
+*/
 
 #include "ComputeSYMGS.hpp"
 #include "ComputeSYMGS_ref.hpp"

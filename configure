@@ -34,7 +34,7 @@ fi
 sed -e "s:HPCG_ROOT_PATH:${bld_path}:g" ${src_path}/Makefile.ext | sed -e "s:HPCG_SRC_PATH:${src_path}:g" | sed -e "s:UNKNOWN:${arg_arch}:" > $mkfile
 
 # creating missing directories
-for path in src testing bin setup
+for path in src testing bin setup llvmve
 do
   if test ! -d $path ; then
     mkdir $path
@@ -48,3 +48,15 @@ fi
 
 # copy the architecture setup file
 cp -f $setup_file setup
+
+
+# copy the LLVMVE Makefile
+vemkfile=${bld_path}/llvmve/Makefile
+
+if test -d $vemkfile -o -f $vemkfile ; then
+  rm -rf $vemkfile
+fi
+
+sed -e "s:HPCG_ROOT_PATH:${bld_path}:g" ${src_path}/llvmve/Makefile.ext | sed -e "s:HPCG_SRC_PATH:${src_path}:g" | sed -e "s:UNKNOWN:${arg_arch}:" > $vemkfile
+
+

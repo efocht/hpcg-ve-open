@@ -3,3 +3,4 @@
 *.LL
 *.o
 xhpcg*
+build/*

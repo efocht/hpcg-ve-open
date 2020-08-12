@@ -17,8 +17,9 @@
 #include "SparseMatrix.hpp"
 #include "Vector.hpp"
 #include "ComputeSPMV.hpp"
+#include "vel_hpcg_kernels.hpp"
 
-extern "C"{
+extern "C" {
   void dwmve0_gs(const double* a, const local_int_t* lda, const local_int_t* n,
                  const local_int_t* m, const local_int_t* ja, const double* x, double* y);
   void dwmve0_spmv(const double* a, const local_int_t* lda, const local_int_t* n,
@@ -74,6 +75,7 @@ ell_b0_trsv_step(const local_int_t irs, const local_int_t ire, const double *a,
   if(nn >= VLEN) {
     /* Tuned library code */
     dwmve0_gs(&a[irs], &lda, &nn, &m, &ja[irs], xv, &work[irs]);
+    // intrin_gs_colwise(irs, ire, &a[irs], &idiag[irs], lda, m, &ja[irs], xv, &work[irs]); // Originally you pass const local_int as ref; does it give better performance? ask E
     for (local_int_t i = irs; i < ire; i++)
       xv[i] = work[i] * idiag[i];
   } else {
