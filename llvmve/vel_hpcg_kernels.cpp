@@ -9,23 +9,25 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
     const double *idiag, const local_int_t lda, const local_int_t m,
     const local_int_t *ja, double *xv, double *work)
 {
+    local_int_t n = ice - ics;
+
     for (local_int_t j = 0; j < m; j++)
     {
-        for (local_int_t i = ics; i < ice; i+= max_vl)
+        for (local_int_t i = 0; i < n; i+= max_vl)
         {
-            uint32_t gvl = ((i + max_vl) > ice) ? (ice - i) : max_vl;
-            // load a, ja, work
-            __vr a_values = _vel_vld_vssl(8, &a[i + lda * j], gvl);
-            __vr col_indices = _vel_vldu_vssl(4, &ja[i + lda * j], gvl); // 32-bit load
-            __vr work_values = _vel_vld_vssl(8, &work[i], gvl);
-            // x indirections and load
-            __vr x_gather_addr = _vel_vsfa_vvssl(col_indices, 3UL, (uint64_t)xv, gvl); 
-            // __vr x_values = _vel_vgt_vvssl(x_gather_addr, (uint64_t)&xv[0], (uint64_t)&xv[m+1], gvl); 
-            __vr x_values = _vel_vld_vssl(8, &a[i + lda * j], gvl);
+            uint32_t gvl = ((i + max_vl) > n) ? (n - i) : max_vl;
+            // load ja, work
+            __vr x_values = _vel_vldlsxnc_vssl(4, &ja[i + lda * j], gvl); // 32-bit load  // reusing for column indices
+            __vr work_values = _vel_vldnc_vssl(8, &work[i], gvl);
+            // x indirections and gather
+            __vr a_values = _vel_vsfa_vvssl(x_values, 3UL, (uint64_t)xv, gvl); // reuse a_values for gather addresses
+            x_values = _vel_vgt_vvssl(a_values, (uint64_t)&xv[0], 0, gvl);
+            // load a
+            a_values = _vel_vldnc_vssl(8, &a[i + lda * j], gvl);
             // 
-            work_values = _vel_vfmsbd_vvvvl(work_values, a_values, x_values, gvl); // work_values -= a[i + lda * j] * xv[ja[i + lda * j]];
+            work_values = _vel_vfnmsbd_vvvvl(work_values, a_values, x_values, gvl); // work_values -= a[i + lda * j] * xv[ja[i + lda * j]];
 
-            _vel_vst_vssl(work_values, 8, (void *)&work[i], gvl); // work[i] -= work_values;
+            _vel_vstnc_vssl(work_values, 8, (void *)&work[i], gvl); // work[i] -= work_values;
         }
     }
 
