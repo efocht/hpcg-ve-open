@@ -54,14 +54,14 @@ PRIMARY_HEADERS = $(addprefix HPCG_SRC_PATH/src/,Geometry.hpp SparseMatrix.hpp V
 
 all: bin/xhpcg
 
-bin/xhpcg: src/main.o $(HPCG_DEPS) HPCG_SRC_PATH/libvhcall/libvhcallVH.so
-	$(LINKER) $(LINKFLAGS) src/main.o $(HPCG_DEPS) $(HPCG_LIBS) -o bin/xhpcg
+bin/xhpcg: src/main.o $(HPCG_DEPS) HPCG_SRC_PATH/libvhcall/libvhcallVH.so llvmve
+	$(LINKER) $(LINKFLAGS) src/main.o $(HPCG_DEPS) $(HPCG_LIBS) llvmve/vel_hpcg_kernels.o -o bin/xhpcg
 	cp -p HPCG_SRC_PATH/libvhcall/libvhcallVH.so bin
 
 clean:
 	rm -f src/*.o bin/xhpcg
 
-.PHONY: all clean
+.PHONY: all clean llvmve
 
 src/main.o: HPCG_SRC_PATH/src/main.cpp $(PRIMARY_HEADERS)
 	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
@@ -157,7 +157,7 @@ src/ComputeSPMV_ref.o: HPCG_SRC_PATH/src/ComputeSPMV_ref.cpp HPCG_SRC_PATH/src/C
 	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
 
 src/ComputeSYMGS.o: HPCG_SRC_PATH/src/ComputeSYMGS.cpp HPCG_SRC_PATH/src/ComputeSYMGS.hpp $(PRIMARY_HEADERS)
-	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
+	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src -IHPCG_SRC_PATH/llvmve $< -o $@
 
 src/ComputeSYMGS_ref.o: HPCG_SRC_PATH/src/ComputeSYMGS_ref.cpp HPCG_SRC_PATH/src/ComputeSYMGS_ref.hpp $(PRIMARY_HEADERS)
 	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
@@ -172,7 +172,7 @@ src/ComputeMG_ref.o: HPCG_SRC_PATH/src/ComputeMG_ref.cpp HPCG_SRC_PATH/src/Compu
 	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
 
 src/ComputeMG.o: HPCG_SRC_PATH/src/ComputeMG.cpp HPCG_SRC_PATH/src/ComputeMG.hpp $(PRIMARY_HEADERS)
-	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
+	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src -IHPCG_SRC_PATH/llvmve $< -o $@
 
 src/ComputeProlongation_ref.o: HPCG_SRC_PATH/src/ComputeProlongation_ref.cpp HPCG_SRC_PATH/src/ComputeProlongation_ref.hpp $(PRIMARY_HEADERS)
 	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
@@ -197,3 +197,6 @@ src/libvhcallVE.o: HPCG_SRC_PATH/src/libvhcallVE.cpp
 
 src/libvehpcg.a: HPCG_SRC_PATH/libve/libvehpcg.a
 	cp -p HPCG_SRC_PATH/libve/libvehpcg.a src
+
+llvmve:
+	make -C llvmve vel_hpcg_kernels.o
