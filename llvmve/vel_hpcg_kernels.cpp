@@ -3,28 +3,30 @@
 #include <cstdint>
 #include "stdio.h"
 
+const local_int_t max_vl = 256;
+
 void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const double *a,
     const double *idiag, const local_int_t lda, const local_int_t m,
     const local_int_t *ja, double *xv, double *work)
 {
     for (local_int_t j = 0; j < m; j++)
     {
-        for (local_int_t i = ics; i < ice; i+=256)
+        for (local_int_t i = ics; i < ice; i+= max_vl)
         {
-            // fprintf(stderr, "%d\n", ice-ics);
+            uint32_t gvl = ((i + max_vl) > ice) ? (ice - i) : max_vl;
             // load a, ja, work
-            __vr a_values = _vel_vld_vssl(8, &a[i + lda * j], 256);
-            __vr col_indices = _vel_vldu_vssl(4, &ja[i + lda * j], 256); // 32-bit
-            __vr work_values = _vel_vld_vssl(8, &work[i], 256);
+            __vr a_values = _vel_vld_vssl(8, &a[i + lda * j], gvl);
+            __vr col_indices = _vel_vldu_vssl(4, &ja[i + lda * j], gvl); // 32-bit load
+            __vr work_values = _vel_vld_vssl(8, &work[i], gvl);
             // x indirections and load
-            __vr x_gather_addr = _vel_vsfa_vvssl(col_indices, 3UL, (uint64_t)xv, 256); 
-            __vr x_values = _vel_vgt_vvssl(x_gather_addr, (uint64_t)&xv[0], (uint64_t)&xv[m], 256); 
+            __vr x_gather_addr = _vel_vsfa_vvssl(col_indices, 3UL, (uint64_t)xv, gvl); 
+            // __vr x_values = _vel_vgt_vvssl(x_gather_addr, (uint64_t)&xv[0], (uint64_t)&xv[m+1], gvl); 
+            __vr x_values = _vel_vld_vssl(8, &a[i + lda * j], gvl);
             // 
-            work_values = _vel_vfmsbd_vvvvl(work_values, a_values, x_values, 256); // work_values -= a[i + lda * j] * xv[ja[i + lda * j]];
+            work_values = _vel_vfmsbd_vvvvl(work_values, a_values, x_values, gvl); // work_values -= a[i + lda * j] * xv[ja[i + lda * j]];
 
-            _vel_vst_vssl(work_values, 8, &work[i], 256); // work[i] -= work_values;
+            _vel_vst_vssl(work_values, 8, (void *)&work[i], gvl); // work[i] -= work_values;
         }
-        // _vel_svob(); // sync after stores with overtake
     }
 
     // for (local_int_t i = ics; i < ice; i+=256)
