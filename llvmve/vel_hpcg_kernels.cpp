@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "stdio.h"
 
-#define UNR 20
+#define UNR 3
 
 const local_int_t max_vl = 256;
 
@@ -57,7 +57,21 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
       
     } // j loop
 
+  
     yp = &yv[i];
+    gvl = max_vl;
+    blk = blk_len;
+#pragma clang loop unroll(full)
+    for (local_int_t k = 0; k < UNR; k++) {
+      if (blk < max_vl) gvl = blk;
+      _vel_vstncot_vssl(work_reg[k], 8, (void *)yp, gvl);
+      blk -= max_vl;
+      yp += gvl;
+      if (blk <= 0) break;
+    } // k loop
+
+    _vel_svob();
+#if 0
     xp = &xv[ics + i];
     idiagp = (double *)&idiag[i];
     gvl = max_vl;
@@ -66,16 +80,14 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
     for (local_int_t k = 0; k < UNR; k++) {
       if (blk < max_vl) gvl = blk;
       __vr diag_reg = _vel_vldnc_vssl(8, idiagp, gvl);
-      _vel_vstncot_vssl(work_reg[k], 8, (void *)yp, gvl);
       __vr x_val = _vel_vfmuld_vvvl(work_reg[k], diag_reg, gvl);   // work[:] * idiag[:];
       _vel_vstnc_vssl(x_val, 8, xp, gvl);                          // xv[i] = work[i] * idiag[i];
       blk -= max_vl;
-      yp += gvl;
       xp += gvl;
       idiagp += gvl;
       if (blk <= 0) break;
     } // k loop
-
+#endif
   } // i loop
 
   // for (local_int_t i = ics; i < ice; i+=256)
