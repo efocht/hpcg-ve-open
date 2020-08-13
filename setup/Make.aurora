@@ -142,8 +142,9 @@ HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES) $(PARAMS) #-DHPCG_DEBUG #-DHPCG_DE
 #
 CXX          = mpinc++ -DSX
 #
-LLVM_VE       = /opt/nec/nosupport/llvm-ve-1.14.0/bin/clang++
-LLVM_VE_FLAGS = $(HPCG_DEFS) --target=ve-linux -std=c++11 -fzvector
+LLVM_VE       = /opt/nec/nosupport/llvm-ve-1.15.0/bin/clang++
+# check out different register allocators: -mllvm -regalloc=basic/fast/greedy
+LLVM_VE_FLAGS = $(HPCG_DEFS) --target=ve-linux -std=c++11 -mllvm -regalloc=greedy -Rpass=unroll
 #
 ifdef DBG
    CXXFLAGS     = $(HPCG_DEFS) -report-all -O0 -g $(PARAMS)
