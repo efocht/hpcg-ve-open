@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "stdio.h"
 
-#define UNR 3
+#define UNR 20
 
 const local_int_t max_vl = 256;
 
@@ -16,7 +16,7 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
   int32_t *jap;
   uint32_t gvl;
 
-  __vr work_reg[UNR];
+  __vr work_reg[UNR], a_reg[UNR], x_reg[UNR];
     
   for (local_int_t i = 0; i < n; i += UNR*max_vl) {
     int blk_len = (i + UNR * max_vl <= n) ? (UNR * max_vl) : (n - i);
@@ -41,14 +41,14 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
       for (local_int_t k = 0; k < UNR; k++) {
         if (blk < max_vl) gvl = blk;
         // load ja
-        __vr ix_reg = _vel_vldlsxnc_vssl(4, jap, gvl); // 32-bit load
+        x_reg[k] = _vel_vldlsxnc_vssvl(4, jap, x_reg[k], gvl); // 32-bit load
         // x indirections and gather
-        __vr addr_reg = _vel_vsfa_vvssl(ix_reg, 3UL, (uint64_t)xp, gvl); // reuse a_values for gather addresses
-        __vr x_reg = _vel_vgt_vvssl(addr_reg, (uint64_t)xp, 0, gvl);
+        __vr a_reg = _vel_vsfa_vvssvl(x_reg[k], 3UL, (uint64_t)xp, a_reg, gvl); // reuse a_values for gather addresses
+        x_reg[k] = _vel_vgt_vvssvl(a_reg, (uint64_t)xp, 0, x_reg[k], gvl);
         // load a
-        __vr a_reg = _vel_vldnc_vssl(8, ap, gvl);
+        a_reg = _vel_vldnc_vssvl(8, ap, a_reg, gvl);
         // work -= a[i + lda * j] * xv[ja[i + lda * j]];
-        work_reg[k] = _vel_vfnmsbd_vvvvl(work_reg[k], a_reg, x_reg, gvl);
+        work_reg[k] = _vel_vfnmsbd_vvvvvl(work_reg[k], a_reg, x_reg[k], work_reg[k], gvl);
         //
         blk -= max_vl;
         ap += gvl; jap += gvl;
@@ -57,7 +57,6 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
       
     } // j loop
 
-  
     yp = &yv[i];
     gvl = max_vl;
     blk = blk_len;
@@ -70,7 +69,6 @@ void intrin_gs_colwise(const local_int_t ics, const local_int_t ice, const doubl
       if (blk <= 0) break;
     } // k loop
 
-    _vel_svob();
 #if 0
     xp = &xv[ics + i];
     idiagp = (double *)&idiag[i];
