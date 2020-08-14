@@ -197,7 +197,10 @@ src/libvhcallVE.o: HPCG_SRC_PATH/src/libvhcallVE.cpp
 	$(CXX) -fPIC -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
 
 src/libvehpcg.a: HPCG_SRC_PATH/libve/libvehpcg.a
-	cp -p HPCG_SRC_PATH/libve/libvehpcg*.a src
+	cp -p HPCG_SRC_PATH/libve/libvehpcg.a src
+
+src/libvehpcg_ftrace.a: HPCG_SRC_PATH/libve/libvehpcg_ftrace.a
+	cp -p HPCG_SRC_PATH/libve/libvehpcg_ftrace.a src
 
 llvmve/libllvmve-hpcg.a:
 	make -C llvmve libllvmve-hpcg.a
