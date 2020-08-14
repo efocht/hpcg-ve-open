@@ -75,7 +75,9 @@ ell_b0_trsv_step(const local_int_t irs, const local_int_t ire, const double *a,
   if(nn >= VLEN) {
     /* Tuned library code */
 #if 0
-    //dwmve0_gs(&a[irs], &lda, &nn, &m, &ja[irs], xv, &work[irs]);
+    dwmve0_gs(&a[irs], &lda, &nn, &m, &ja[irs], xv, &work[irs]);
+    for (local_int_t i = irs; i < ire; i++)
+      xv[i] = work[i] * idiag[i];
 #else
     intrin_gs_colwise(irs, ire, &a[irs], &idiag[irs], lda, m, &ja[irs], xv, &work[irs]); // Originally you pass const local_int as ref; does it give better performance? ask E
     for (local_int_t i = irs; i < ire; i++)
