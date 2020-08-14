@@ -54,14 +54,15 @@ PRIMARY_HEADERS = $(addprefix HPCG_SRC_PATH/src/,Geometry.hpp SparseMatrix.hpp \
 
 all: bin/xhpcg
 
-bin/xhpcg: src/main.o $(HPCG_DEPS) HPCG_SRC_PATH/libvhcall/libvhcallVH.so llvmve
-	$(LINKER) $(LINKFLAGS) src/main.o $(HPCG_DEPS) $(HPCG_LIBS) llvmve/vel_hpcg_kernels.o -o bin/xhpcg
+bin/xhpcg: src/main.o $(HPCG_DEPS) HPCG_SRC_PATH/libvhcall/libvhcallVH.so
+	$(LINKER) $(LINKFLAGS) src/main.o $(HPCG_DEPS) $(HPCG_LIBS) -o bin/xhpcg
 	cp -p HPCG_SRC_PATH/libvhcall/libvhcallVH.so bin
 
 clean:
 	rm -f src/*.o *.L *.LL bin/xhpcg
+	make -C llvmve clean
 
-.PHONY: all clean llvmve
+.PHONY: all clean llvmve/libllvmve-hpcg.a
 
 src/main.o: HPCG_SRC_PATH/src/main.cpp $(PRIMARY_HEADERS)
 	$(CXX) -c $(CXXFLAGS) -IHPCG_SRC_PATH/src $< -o $@
@@ -198,5 +199,5 @@ src/libvhcallVE.o: HPCG_SRC_PATH/src/libvhcallVE.cpp
 src/libvehpcg.a: HPCG_SRC_PATH/libve/libvehpcg.a
 	cp -p HPCG_SRC_PATH/libve/libvehpcg*.a src
 
-llvmve:
-	make -C llvmve vel_hpcg_kernels.o
+llvmve/libllvmve-hpcg.a:
+	make -C llvmve libllvmve-hpcg.a
