@@ -144,7 +144,7 @@ CXX          = mpinc++ -DSX
 #
 LLVM_VE       = /opt/nec/nosupport/llvm-ve-1.15.0/bin/clang++
 # check out different register allocators: -mllvm -regalloc=basic/fast/greedy
-LLVM_VE_FLAGS = $(HPCG_DEFS) --target=ve-linux -std=c++11 -Rpass=unroll
+LLVM_VE_FLAGS = $(HPCG_DEFS) --target=ve-linux -std=c++11 -Rpass="(inline|unroll|loop.*)"
 #
 ifdef DBG
    CXXFLAGS     = $(HPCG_DEFS) -report-all -O0 -g $(PARAMS)

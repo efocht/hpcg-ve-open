@@ -2,10 +2,12 @@
 arch ?= UNKNOWN
 include ../setup/Make.$(arch)
 
-HPCGSRC = ../HPCG_SRC_PATH/src
-VESRC = ../HPCG_SRC_PATH/llvmve
+HPCGSRC = HPCG_SRC_PATH/src
+VESRC = HPCG_SRC_PATH/llvmve
 
-LLVMSRC = vel_hpcg_kernels.cpp vel_hpcg_kernels_regs.cpp vel_hpcg_kernels_casc.cpp vel_hpcg_kernels_epilogue.cpp 
+LLVMSRC = vel_hpcg_kernels.cpp vel_hpcg_kernels_regs.cpp \
+ vel_hpcg_kernels_casc.cpp vel_hpcg_kernels_epilogue.cpp \
+ compute_symgs_intr.cpp
 LLVMOBJ = $(patsubst %.cpp,%.o,$(LLVMSRC))
 
 NCPPSRC = 

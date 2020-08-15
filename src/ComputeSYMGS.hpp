@@ -17,13 +17,19 @@
 #include "SparseMatrix.hpp"
 #include "Vector.hpp"
 #include "ComputeSPMV.hpp"
-#include "vel_hpcg_kernels.hpp"
+//#include "vel_hpcg_kernels.hpp"
+//#include "compute_symgs.hpp"
 
 extern "C" {
   void dwmve0_gs(const double* a, const local_int_t* lda, const local_int_t* n,
                  const local_int_t* m, const local_int_t* ja, const double* x, double* y);
   void dwmve0_spmv(const double* a, const local_int_t* lda, const local_int_t* n,
                    const local_int_t* m, const local_int_t* ja, const double* x, double* y);
+  void ell_col_b0_trsv_up(const local_int_t ic_min, const local_int_t ic_max,
+                          const local_int_t *icptr, const local_int_t *iclen,
+                          const double *a, const double *idiag,
+                          const local_int_t lda, const local_int_t *ja,
+                          double *xv, double *work);
 }
 
 //
@@ -74,7 +80,7 @@ ell_b0_trsv_step(const local_int_t irs, const local_int_t ire, const double *a,
 
   if(nn >= VLEN) {
     /* Tuned library code */
-#if 0
+#if 1
     dwmve0_gs(&a[irs], &lda, &nn, &m, &ja[irs], xv, &work[irs]);
     for (local_int_t i = irs; i < ire; i++)
       xv[i] = work[i] * idiag[i];

@@ -1,6 +1,6 @@
 #! /bin/sh
 
-src_path=`echo $0 | sed -e s:/configure$::`
+src_path=$(realpath `echo $0 | sed -e s:/configure$::`)
 bld_path=`pwd`
 
 #FIXME: need to check whether src and bld are the same (test f1 -ef f2)

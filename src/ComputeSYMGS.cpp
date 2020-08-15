@@ -97,10 +97,13 @@ int ComputeSYMGS_mpi_only( const SparseMatrix & A, const Vector & r, Vector & x,
     for (local_int_t i = 0; i < n; i++)
       work1[i] = rv[i];
 
+#if 1
     ell_col_b0_trsv(0, maxcolor, icptr, color_mL, a, idiag, lda, ja, xv, work1);
+#else
+    ell_col_b0_trsv_up(0, maxcolor, icptr, color_mL, a, idiag, lda, ja, xv, work1);
+#endif
 
     for (local_int_t i=0; i<n; i++) {
-      //work1[i] = diag[i] * xv[i];  // this is already done as xv[i] = work1[i] * idiag[i]
       xv[i] = 0.0;
     }
 
