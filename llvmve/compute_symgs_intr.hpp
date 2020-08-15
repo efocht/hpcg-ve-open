@@ -16,7 +16,7 @@ const local_int_t max_vl = 256;
 inline
 void vecmult_elemwise(const local_int_t n, const double *a, const double *b, double *x)
 {
-#define UNR 1
+#define UNR 4
   double *xp = x, *ap = (double *)a, *bp = (double *)b;
   uint32_t vl;
   

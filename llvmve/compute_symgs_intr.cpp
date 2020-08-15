@@ -17,6 +17,9 @@ ell_col_b0_trsv_intr(const local_int_t ic_min, const local_int_t ic_max,
       irs = icptr[ic];		// start row for color ic
       ire = icptr[ic+1];	// end row for color ic
       m   = iclen[ic];		// max width of matrix for the ic color
+      //
+      // llvm fails to inline the function
+      //
       ell_gs_colwise_sweep(irs, ire, a, idiag, lda, m, ja, xv, work);
     }
   } else {
@@ -24,6 +27,9 @@ ell_col_b0_trsv_intr(const local_int_t ic_min, const local_int_t ic_max,
       irs = icptr[ic];		// start row for color ic
       ire = icptr[ic+1];	// end row for color ic
       m   = iclen[ic];		// max width of matrix for the ic color
+      //
+      // llvm fails to inline the function
+      //
       ell_gs_colwise_sweep(irs, ire, a, idiag, lda, m, ja, xv, work);
     }
   }
@@ -101,7 +107,7 @@ ell_col_b0_trsv_up(const local_int_t ic_min, const local_int_t ic_max,
 #undef UNR
     _vel_svob();
 
-#if 1
+#if 0
     vecmult_elemwise(ice - ics, (const double *)&yv[ics], &idiag[ics], &xv[ics]);
 #else
     idiagp = (double *)&idiag[ics];
