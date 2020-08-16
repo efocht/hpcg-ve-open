@@ -26,6 +26,7 @@
 #include "ReportResults.hpp"
 #include "OutputFile.hpp"
 #include "OptimizeProblem.hpp"
+#include <stdio.h>
 
 #ifdef HPCG_DEBUG
 #include <fstream>
@@ -371,6 +372,7 @@ void ReportResults(const SparseMatrix & A, int numberOfMgLevels, int numberOfCgS
     bool isValidRun = (testcg_data.count_fail==0) && (testsymmetry_data.count_fail==0) && (testnorms_data.pass) && (!global_failure);
     if (isValidRun) {
       doc.get("Final Summary")->add("HPCG result is VALID with a GFLOP/s rating of", totalGflops);
+      printf("HPCG result is VALID with a GFLOP/s rating of %.3f\n", totalGflops);
       doc.get("Final Summary")->add("HPCG 2.4 rating for historical reasons is", totalGflops24);
       if (!A.isDotProductOptimized) {
         doc.get("Final Summary")->add("Reference version of ComputeDotProduct used","Performance results are most likely suboptimal");
@@ -401,6 +403,7 @@ void ReportResults(const SparseMatrix & A, int numberOfMgLevels, int numberOfCgS
       }
     } else {
       doc.get("Final Summary")->add("HPCG result is","INVALID.");
+      printf("HPCG result is INVALID.\n");
       doc.get("Final Summary")->add("Please review the YAML file contents","You may NOT submit these results for consideration.");
     }
 
