@@ -22,14 +22,14 @@ void intrin_gs_colwise_regs(const local_int_t ics, const local_int_t ice, const 
 
   __vr work_reg[UNR], a_reg[UNR], x_reg[UNR];
 
-  for (local_int_t i = 0; i < n; i += UNR*max_vl) {
+  for (uint64_t i = 0; i < n; i += UNR*max_vl) {
     int blk_len = (i + UNR * max_vl <= n) ? (UNR * max_vl) : (n - i);
     int blk = blk_len;
 
     yp = &yv[i];
     gvl = max_vl;
 #pragma clang loop unroll(full)
-    for (local_int_t k = 0; k < UNR; k++) {
+    for (uint64_t k = 0; k < UNR; k++) {
       if (blk < max_vl) gvl = blk;
       work_reg[k] = _vel_vldnc_vssvl(8, yp, work_reg[k], gvl);
       blk -= max_vl;
@@ -37,12 +37,12 @@ void intrin_gs_colwise_regs(const local_int_t ics, const local_int_t ice, const 
       if (blk <= 0) break;
     }
 
-    for (local_int_t j = 0; j < m; j++) {
+    for (uint64_t j = 0; j < m; j++) {
       ap = (double *)&a[i + lda * j]; jap = (int32_t *)&ja[i + lda * j];
       gvl = max_vl;
       blk = blk_len;
 #pragma clang loop unroll(full)
-      for (local_int_t k = 0; k < UNR; k++) {
+      for (uint64_t k = 0; k < UNR; k++) {
         if (blk < max_vl) gvl = blk;
         x_reg[k] = _vel_vldlsxnc_vssvl(4, jap, x_reg[k], gvl);
         a_reg[k] = _vel_vsfa_vvssvl(x_reg[k], 3UL, (uint64_t)xp, a_reg[k], gvl);
@@ -59,7 +59,7 @@ void intrin_gs_colwise_regs(const local_int_t ics, const local_int_t ice, const 
     gvl = max_vl;
     blk = blk_len;
 #pragma clang loop unroll(full)
-    for (local_int_t k = 0; k < UNR; k++) {
+    for (uint64_t k = 0; k < UNR; k++) {
       if (blk < max_vl) gvl = blk;
       _vel_vstncot_vssl(work_reg[k], 8, (void *)yp, gvl);
       blk -= max_vl;
@@ -82,17 +82,15 @@ void spmv_intr_regs(const double* a, const local_int_t lda, const local_int_t n,
 
   __vr work_reg[UNR], a_reg[UNR], x_reg[UNR];
 
-  for (local_int_t i = 0; i < n; i += UNR*max_vl) {
+  for (uint64_t i = 0; i < n; i += UNR*max_vl) {
     int blk_len = (i + UNR * max_vl <= n) ? (UNR * max_vl) : (n - i);
     int blk = blk_len;
 
     yp = &y[i];
     gvl = max_vl;
 
-//         // work_reg init to 0
-
 #pragma clang loop unroll(full)
-    for (local_int_t k = 0; k < UNR; k++) {
+    for (uint64_t k = 0; k < UNR; k++) {
       if (blk < max_vl) gvl = blk;
       work_reg[k] = _vel_vxor_vvvl(work_reg[k] , work_reg[k], gvl);
       blk -= max_vl;
@@ -101,12 +99,12 @@ void spmv_intr_regs(const double* a, const local_int_t lda, const local_int_t n,
     }
 
 
-    for (local_int_t j = 0; j < m; j++) {
+    for (uint64_t j = 0; j < m; j++) {
       ap = (double *)&a[i + lda * j]; jap = (int32_t *)&ja[i + lda * j];
       gvl = max_vl;
       blk = blk_len;
 #pragma clang loop unroll(full)
-      for (local_int_t k = 0; k < UNR; k++) {
+      for (uint64_t k = 0; k < UNR; k++) {
         if (blk < max_vl) gvl = blk;
         x_reg[k] = _vel_vldlsxnc_vssvl(4, jap, x_reg[k], gvl); // x offset
         a_reg[k] = _vel_vsfa_vvssvl(x_reg[k], 3UL, (uint64_t)xp, a_reg[k], gvl); // x address
@@ -124,7 +122,7 @@ void spmv_intr_regs(const double* a, const local_int_t lda, const local_int_t n,
     gvl = max_vl;
     blk = blk_len;
 #pragma clang loop unroll(full)
-    for (local_int_t k = 0; k < UNR; k++) {
+    for (uint64_t k = 0; k < UNR; k++) {
       if (blk < max_vl) gvl = blk;
       _vel_vstncot_vssl(work_reg[k], 8, (void *)yp, gvl);
       blk -= max_vl;
