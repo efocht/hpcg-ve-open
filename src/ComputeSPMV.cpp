@@ -35,6 +35,8 @@
 #include <cassert>
 #include <iostream>
 
+#define INTR
+
 using namespace std;
 
 /*!
@@ -90,8 +92,14 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y)
 #ifndef HPCG_NO_MPI
   ExchangeHalo_wait(0, &requests, num_requests);
 #endif
+
   // halo matrix multiplied with (remote) halo X elements
+#ifndef INTR
   dwmve0_spmv(ah, &ldah, &nah, &mh, jah, &x.values[n], vh);
+#else
+  spmv_intr_regs(ah, ldah, nah, mh, jah, &x.values[n], vh);
+#endif
+
 #pragma _NEC ivdep
   for (local_int_t ih = 0; ih < nah; ih++) {
     local_int_t i = hrows[ih];
@@ -135,8 +143,14 @@ int ComputeSPMV_L( const SparseMatrix & A, Vector & x, Vector & y)
 #ifndef HPCG_NO_MPI
   ExchangeHalo_wait(0, &requests, num_requests);
 #endif
-  // halo matrix multiplied with (remote) halo X elements
+
+// halo matrix multiplied with (remote) halo X elements
+#ifndef INTR
   dwmve0_spmv(ah, &ldah, &nah, &mh, jah, &x.values[n], vh);
+#else
+  spmv_intr_regs(ah, ldah, nah, mh, jah, &x.values[n], vh);
+#endif
+
 #pragma _NEC ivdep
   for (local_int_t ih = 0; ih < nah; ih++) {
     local_int_t i = hrows[ih];
@@ -196,7 +210,12 @@ int ComputeSPMV_DotProd( const SparseMatrix & A, Vector & x, Vector & y,
   ExchangeHalo_wait(0, &requests, num_requests);
 #endif
   // halo matrix multiplied with (remote) halo X elements
+#ifndef INTR
   dwmve0_spmv(ah, &ldah, &nah, &mh, jah, &x.values[n], vh);
+#else
+  spmv_intr_regs(ah, ldah, nah, mh, jah, &x.values[n], vh);
+#endif
+
 #pragma _NEC ivdep
   for (local_int_t ih = 0; ih < nah; ih++) {
     local_int_t i = hrows[ih];
