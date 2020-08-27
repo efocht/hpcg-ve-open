@@ -25,9 +25,14 @@
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
+// #define INTR
+
 extern "C"{
   void dwmve0_spmv(const double* a, const local_int_t* lda, const local_int_t* n,
                    const local_int_t* m, const local_int_t* ja, const double* x, double* y);
+
+  void spmv_intr_regs(const double* a, const local_int_t lda, const local_int_t n,
+                   const local_int_t m, const local_int_t* ja, const double* x, double* y);                
 }
 
 //
@@ -65,7 +70,14 @@ ell_b0_spmv_probe(const double *const a, const double *const diag, const int lda
     local_int_t ist = i, iend = MIN(ist + BLKSZ, n);
     local_int_t nn = iend - ist;
     // lower and upper triangular parts of the sparse matrix A
-    dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+    // dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+
+#ifndef INTR
+  dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+#else
+  spmv_intr_regs(&a[ist], lda, nn, m, &ja[ist], x, &y[ist]);
+#endif
+
     // diagonal part of the sparse matrix A
     if (diag) {
       for(local_int_t i = ist; i < iend; i++)
@@ -94,7 +106,14 @@ ell_b0_spmv_add_probe(const double *const a, const double *const diag, const int
     local_int_t ist = i, iend = MIN(ist + BLKSZ, n);
     local_int_t nn = iend - ist;
     // lower and upper triangular parts of the sparse matrix A
-    dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+    // dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+
+#ifndef INTR
+  dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+#else
+  spmv_intr_regs(&a[ist], lda, nn, m, &ja[ist], x, &y[ist]);
+#endif
+
     // diagonal part of the sparse matrix A
     if (diag) {
       for(local_int_t i = ist; i < iend; i++)
@@ -129,7 +148,13 @@ ell_b0_spmv_fusedot_probe(const double *const a, const double *const diag, const
     local_int_t ist = i, iend = MIN(ist + BLKSZ, n);
     local_int_t nn = iend - ist;
     // lower and upper triangular parts of the sparse matrix A
-    dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+
+#ifndef INTR
+  dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
+#else
+  spmv_intr_regs(&a[ist], lda, nn, m, &ja[ist], x, &y[ist]);
+#endif
+
     // diagonal part of the sparse matrix A
     for(local_int_t i = ist; i < iend; i++) {
       y[i] += diag[i] * x[i];
