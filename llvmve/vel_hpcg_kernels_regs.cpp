@@ -106,7 +106,6 @@ void spmv_intr_regs(const double* a, const local_int_t lda, const local_int_t n,
       if (blk <= 0) break;
     }
 
-
     for (uint64_t j = 0; j < m; j++) {
       ap = (double *)&a[i + lda * j]; jap = (int32_t *)&ja[i + lda * j];
       gvl = max_vl;
@@ -131,3 +130,15 @@ void spmv_intr_regs(const double* a, const local_int_t lda, const local_int_t n,
     blk = blk_len;
 #pragma clang loop unroll(full)
     for (uint64_t k = 0; k < UNR; k++) {
+      if (blk < max_vl) gvl = blk;
+      _vel_vstncot_vssl(work_reg[k], 8, (void *)yp, gvl);
+      blk -= max_vl;
+      if (blk > 0)
+        yp += max_vl;
+      else
+        break;
+    } // k loop
+  } // i lopp
+
+  _vel_svob();
+}
