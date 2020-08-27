@@ -143,15 +143,16 @@ HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES) $(PARAMS) #-DHPCG_DEBUG #-DHPCG_DE
 CXX          = mpinc++ -DSX
 #
 LLVM_VE       = /opt/nec/nosupport/llvm-ve-1.15.0/bin/clang++
+LLVM_VE       = /home/focht/llvm-rematerialize/bin/clang++
 # check out different register allocators: -mllvm -regalloc=basic/fast/greedy
-LLVM_VE_FLAGS = $(HPCG_DEFS) --target=ve-linux -std=c++11 -Rpass="(inline|unroll|loop.*)"
+LLVM_VE_FLAGS = $(HPCG_DEFS) --target=ve-linux -std=c++11 -Rpass="(inline|unroll|loop.*)" -mllvm -show-spill-message-vec
 #
 ifdef DBG
    CXXFLAGS     = $(HPCG_DEFS) -report-all -O0 -g $(PARAMS)
    LLVM_VE_FLAGS += -O0 -g -ggdb -DHPCG_DEBUG
 else
    CXXFLAGS     = $(HPCG_DEFS) -report-all -O4 -finline -finline-functions $(PARAMS)
-   LLVM_VE_FLAGS += -O3 -DNDEBUG
+   LLVM_VE_FLAGS += -O3 -DNDEBUG 
 endif
 
 ifdef FTRACE

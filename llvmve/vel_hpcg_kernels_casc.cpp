@@ -20,26 +20,26 @@ const local_int_t blksz1  =  1 * 256;
 #define UNROLL_GS_BLOCK(UNROLL,VLEN) do {                               \
   yp = &yv[imin];                                                       \
   _Pragma("clang loop unroll(full)")                                    \
-  for (local_int_t k = 0; k < UNROLL; k++) {                            \
-    work_reg[k] = _vel_vldnc_vssl(8, yp, VLEN);                         \
+  for (uint64_t k = 0; k < UNROLL; k++) {                               \
+    work_reg[k] = _vel_vldnc_vssvl(8, yp, work_reg[k], VLEN);           \
     yp += VLEN;                                                         \
   }                                                                     \
-  for (local_int_t j = 0; j < m; j++) {                                 \
+  for (uint64_t j = 0; j < m; j++) {                                    \
     ap = (double *)&a[imin + lda * j];                                  \
     jap = (int32_t *)&ja[imin + lda * j];                               \
     _Pragma("clang loop unroll(full)")                                  \
-    for (local_int_t k = 0; k < UNROLL; k++) {                          \
-      __vr x_reg = _vel_vldlsxnc_vssl(4, jap, VLEN);                    \
-      __vr a_reg = _vel_vsfa_vvssl(x_reg, 3UL, (uint64_t)xp, VLEN);     \
-      x_reg = _vel_vgt_vvssl(a_reg, (uint64_t)xp, 0, VLEN);             \
-      a_reg = _vel_vldnc_vssl(8, ap, VLEN);                             \
-      work_reg[k] = _vel_vfnmsbd_vvvvl(work_reg[k], a_reg, x_reg, VLEN); \
+    for (uint64_t k = 0; k < UNROLL; k++) {                             \
+      x_reg[k] = _vel_vldlsxnc_vssvl(4, jap, x_reg[k], VLEN);           \
+      a_reg[k] = _vel_vsfa_vvssvl(x_reg[k], 3UL, (uint64_t)xp, a_reg[k], VLEN); \
+      x_reg[k] = _vel_vgt_vvssvl(a_reg[k], (uint64_t)xp, 0, x_reg[k], VLEN); \
+      a_reg[k] = _vel_vldnc_vssvl(8, ap, a_reg[k], VLEN);                \
+      work_reg[k] = _vel_vfnmsbd_vvvvvl(work_reg[k], a_reg[k], x_reg[k], work_reg[k], VLEN); \
       ap += VLEN; jap += VLEN;                                          \
     }                                                                   \
   }                                                                     \
   yp = &yv[imin];                                                       \
   _Pragma("clang loop unroll(full)")                                    \
-  for (local_int_t k = 0; k < UNROLL; k++) {                            \
+  for (uint64_t k = 0; k < UNROLL; k++) {                             \
     _vel_vstncot_vssl(work_reg[k], 8, (void *)yp, VLEN);                \
     yp += VLEN;                                                         \
   }                                                                     \
@@ -51,14 +51,14 @@ void intrin_gs_colwise_casc(const local_int_t ics, const local_int_t ice, const 
                             const double *idiag, const local_int_t lda, const local_int_t m,
                             const local_int_t *ja, double *xv, double *yv)
 {
-  local_int_t n = ice - ics;
+  uint64_t n = ice - ics;
   double *xp = (double *)xv, *yp, *ap, *idiagp;
   int32_t *jap;
   uint32_t gvl;
-  local_int_t imin, imax;
-  __vr work_reg[UNR16];
+  uint64_t imin, imax;
+  __vr work_reg[UNR16], x_reg[UNR16], a_reg[UNR16];
 
-  for (local_int_t i = 0; i < n; i += blksz16) {
+  for (uint64_t i = 0; i < n; i += blksz16) {
     imin = i;
     imax = MIN(i + blksz16, n);
     if (imax < n || imax-imin >= blksz16) {
