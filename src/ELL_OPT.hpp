@@ -3,6 +3,19 @@
 
 #include "Geometry.hpp"
 
+//
+// +--------+--------+  
+// |        |        |
+// |        |        |
+// |   L    |   U    |  n
+// |        |        | rows
+// |        |        |
+// |        |        |
+// +--------+--------+
+// |<- mL ->|<- mU ->|
+//
+// matrix stored column wise, therefore both, L and U are contiguous in memory
+
 struct ELL_STRUCT{
   double       *a;
   local_int_t  *ja;
@@ -13,6 +26,19 @@ struct ELL_STRUCT{
   local_int_t   mU;     // width of upper matrix in MATRIX_LU format
 };
 typedef struct ELL_STRUCT ELL;
+
+//
+// +--------+  
+// |        |
+// |        |
+// |        | nah
+// |        | rows
+// |        |
+// |        |
+// +--------+
+// |<- mh ->|
+//
+// matrix stored column wise, therefore both, L and U are contiguous in memory
 
 struct HALO_STRUCT{
   double          *ah;
