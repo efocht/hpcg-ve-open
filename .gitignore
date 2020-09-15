@@ -5,3 +5,5 @@
 xhpcg*
 build/*
 .vscode/*
+hpcg*.txt
+.ref_1x1x1_16x16x16
