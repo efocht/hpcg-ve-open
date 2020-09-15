@@ -118,7 +118,12 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
   local_int_t lda = ell->lda = n;
   HALO*      halo = opt->halo;
 
+#ifndef HPCG_NO_MPI
   local_int_t      nh = halo->nh   = A.numberOfExternalValues;
+#else
+  local_int_t      nh = halo->nh = 0;
+#endif
+
   local_int_t   *rows = halo->rows = new local_int_t[nh + maxcolor+1 + 2*maxcolor];
   local_int_t  *hcptr = halo->hcptr = rows + nh;
   local_int_t  *color_mL = opt->color_mL = hcptr + maxcolor + 1;
@@ -135,9 +140,10 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
 #ifdef FTRACE
   ftrace_region_begin("LUH_1");
 #endif
-  //
-  // Cound L U column widths of reordered and normal matrix
-  //
+  /*
+    Count L,U and Halo column widths the new matrix after reordering.
+    The maximum values are used to set the dimensions of the matrices.
+  */
 
   for(local_int_t i=0; i<n; i++) {
     colIndL[i]=0;
@@ -149,17 +155,17 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
     for(local_int_t jj=0; jj<maxNonzerosInRow; jj++){
 #pragma _NEC ivdep
       for(local_int_t i=0; i<n; i++){
-        local_int_t ijj = i*maxNonzerosInRow+jj;
-        local_int_t j    = A.mtxIndL[0][ijj];
+        local_int_t ijj = i*maxNonzerosInRow+jj;         // Get the index of the NNZ element in A. Require contiguous arrays HPCG option.
+        local_int_t j    = A.mtxIndL[0][ijj];            // Get the column of that NNZ element
         if (j < 0) continue;
-        local_int_t inew = opt->perm0[i];
-        if (j >= n) {      // if j>=n then j points to neighbor region.
+        local_int_t inew = opt->perm0[i];                // inew = destination row index in ELL of the current row in A.
+        if (j >= n) {                                    // if j>=n, then j points to elem in Halo region.
           A.mtxIndL[0][ijj] |= (hrows[inew]<<24);
           hrows[inew]++;
-        } else if ( opt->perm0[j] > inew ){  // jnew > inew
+        } else if ( opt->perm0[j] > inew ){              // if jnew > inew (after reorder), then j points to elem in Upper region.
           A.mtxIndL[0][ijj] |= (colIndU[i]<<24);
           colIndU[i]++;
-        } else if ( opt->perm0[j] < inew ) {  // jnew < inew
+        } else if ( opt->perm0[j] < inew ) {             // if jnew < inew (after reorder), then j points to elem in Lower region
           A.mtxIndL[0][ijj] |= (colIndL[i]<<24);
           colIndL[i]++;
         }
@@ -189,7 +195,11 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
   ftrace_region_end("LUH_1");
   ftrace_region_begin("LUH_2");
 #endif
-  // count rows in halo matrix
+  /*  Count rows in halo matrix that have at least 1 element.
+      Post: max_indH is the maximum column width of the halo.
+            nhrows is the number of halo matrix rows with at least 1 element. Confusing this with nh leads to wrong hcptr[]
+            rows[i] contains the 'source' index corresponds to in the already reordered ELL matrix of the ith row in the ELL halo matrix.
+  */ 
   local_int_t nhrows = 0, max_indH = 0;
   for (local_int_t inew=0; inew<n; inew++) {
     if (hrows[inew] > 0) {
@@ -203,17 +213,28 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
   // confusing this with nh leads to wrong hcptr[]
   local_int_t nah = halo->nah = nhrows;
   
+  /* 
+      Post 
+          hrows: the ith value of hrows contains the index of rows.
+          Note: rows and hrows work like perm and iperm.
+  */
   for(local_int_t ih=0; ih<nah; ih++){
     local_int_t inew = rows[ih];
     hrows[inew] = ih;
-    hcolor[ih] = icolor[opt->iperm0[inew]];
+    hcolor[ih] = icolor[opt->iperm0[inew]]; // Rows in the halo have the same color as the original.
   }
 
-  // count up halo colors to make a pointer array
+
   for (local_int_t ic=0; ic<=maxcolor; ic++)
     hcptr[ic] = 0;
 
-  // width of upper part of matrix for each color
+  /*  Determine the width of Upper and Lower part of the matrix for each color.
+      Post:
+          color_mL: contains the max width of each color of the ELL_L
+          color_mU: contains the max width of each color of the ELL_U
+          max_indL: is the max width of ELL_L
+          max_indU: is the max width of ELL_U
+  */
   int max_indL = 0, max_indU = 0;
   for (local_int_t ic=0; ic<maxcolor; ic++) {
     local_int_t ics       = icptr[ic];
@@ -270,6 +291,8 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
       hcptr[hcolor[ih]+1]++;
   }
 
+  /* Post
+          hcptr: contains the index of the first row to each color in the halo matrix. */
   for (local_int_t ic=1; ic<=maxcolor; ic++)
     hcptr[ic] += hcptr[ic-1];
 
@@ -293,7 +316,7 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
   ell->ja    = new local_int_t[lda*(mL+mU) + nah*mh];   // allocate multiple arrays in one step
   local_int_t *jah = halo->jah = ell->ja + lda*(mL+mU);
   
-  // initialization
+  // Initialization start: values and col. index of Lower, Upper and Halo 
   for(local_int_t j=0; j<mL+mU; j++){
     for(local_int_t i=0; i<n; i++){
       ell->a[i+lda*j]  = 0;
@@ -318,6 +341,7 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
   }
   for(local_int_t ih=0; ih<nah; ih++)
     colIndH[ih] = 0;
+  // Initialization end
 
   if (maxNonzerosInRow >= 254 || n > (1<<24)) {
     for(local_int_t jj=0; jj<maxNonzerosInRow; jj++){
@@ -362,10 +386,10 @@ static void Optimize_Store_ELL_L_U_halo(SparseMatrix & A)
     }
   } else {   // m < 254
 #pragma _NEC ivdep
-    for(local_int_t ijj=0; ijj<n*maxNonzerosInRow; ijj++){
-      local_int_t i = ijj / maxNonzerosInRow;
-      local_int_t jj = ijj % maxNonzerosInRow;
-      local_int_t j    = A.mtxIndL[0][ijj];
+    for(local_int_t ijj=0; ijj<n*maxNonzerosInRow; ijj++){  // ijj = 'nnz' / element of the matrix
+      local_int_t i = ijj / maxNonzerosInRow;               // i  = row index.
+      local_int_t jj = ijj % maxNonzerosInRow;              // jj = ELL column
+      local_int_t j    = A.mtxIndL[0][ijj];                 // j  = colum_index of ijj
       if (j >= 0) {
         local_int_t k = (j >> 24);
         j = j & 0xffffff;
