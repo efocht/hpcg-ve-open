@@ -72,7 +72,7 @@ ell_b0_spmv_probe(const double *const a, const double *const diag, const int lda
     // lower and upper triangular parts of the sparse matrix A
     // dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
 
-#ifndef INTR
+#ifndef VEINTR_SPMV
   dwmve0_spmv(&a[ist], &lda, &nn, &m, &ja[ist], x, &y[ist]);
 #else
   spmv_intr_regs(&a[ist], lda, nn, m, &ja[ist], x, &y[ist]);

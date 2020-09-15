@@ -132,6 +132,10 @@ ifndef OPENMP
    HPCG_OPTS     = -DHPCG_CONTIGUOUS_ARRAYS -DHPCG_NO_OPENMP
 endif
 #
+# uncomment the line below for LLVM intrinsics support
+#
+#HPCG_OPTS += -DVEINTR_SYMGS -DVEINTR_SPMV
+#
 # ----------------------------------------------------------------------
 #
 HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES) $(PARAMS) #-DHPCG_DEBUG #-DHPCG_DETAILED_DEBUG
